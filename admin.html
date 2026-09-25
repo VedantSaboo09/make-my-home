@@ -80,4 +80,548 @@
 
     button {
       margin-top: 20px;
-      padding:
+      padding: 13px 20px;
+      border: none;
+      border-radius: 7px;
+      background: #111;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #333;
+    }
+
+    .message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 7px;
+      display: none;
+    }
+
+    .success {
+      background: #d9f7df;
+      color: #176b2c;
+      display: block;
+    }
+
+    .error {
+      background: #ffdede;
+      color: #a40000;
+      display: block;
+    }
+
+    .product {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .product img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .product-info h3 {
+      margin-bottom: 6px;
+    }
+
+    .product-info p {
+      margin: 4px 0;
+      color: #555;
+    }
+
+    .delete-btn {
+      background: #d60000;
+      margin-top: 0;
+    }
+
+    .delete-btn:hover {
+      background: #a00000;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 12px;
+      }
+
+      .product {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .product img {
+        width: 100%;
+        height: 200px;
+      }
+
+      .delete-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Make My Home</h1>
+  <p>Admin Dashboard</p>
+</header>
+
+<div class="container">
+
+  <!-- ADD PRODUCT -->
+  <div class="card">
+    <h2>Add New Product</h2>
+
+    <label>Product Name</label>
+    <input
+      type="text"
+      id="productName"
+      placeholder="Example: Premium Bed Cover"
+    >
+
+    <label>Price (₹)</label>
+    <input
+      type="number"
+      id="productPrice"
+      placeholder="Example: 4715"
+    >
+
+    <label>Category</label>
+    <select id="productCategory">
+      <option value="bedcover">Bed Cover</option>
+      <option value="comforter">Comforter</option>
+      <option value="decor">Home Decor</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label>Description</label>
+    <textarea
+      id="productDescription"
+      placeholder="Enter product description"
+    ></textarea>
+
+    <label>Product Photo</label>
+    <input
+      type="file"
+      id="productImage"
+      accept="image/*"
+    >
+
+    <button onclick="addProduct()">Add Product</button>
+
+    <div id="message" class="message"></div>
+  </div>
+
+
+  <!-- PRODUCTS -->
+  <div class="card">
+    <h2>Products</h2>
+
+    <div id="products">
+      Loading products...
+    </div>
+  </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   SUPABASE CONFIGURATION
+   ===================================================== */
+
+const SUPABASE_URL = "https://mtipphvvgeoqmzjocejg.supabase.co/rest/v1/";
+
+const SUPABASE_KEY = "sb_publishable_Xia4PqJS_jYsnrLrzMDZjg_8tS8fi7O";
+
+
+/* =====================================================
+   CREATE SUPABASE CLIENT
+   IMPORTANT: This must happen AFTER the Supabase
+   library has loaded.
+   ===================================================== */
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+
+/* =====================================================
+   SHOW MESSAGE
+   ===================================================== */
+
+function showMessage(message, type) {
+
+  const box = document.getElementById("message");
+
+  box.textContent = message;
+
+  box.className = "message " + type;
+
+}
+
+
+/* =====================================================
+   ADD PRODUCT
+   ===================================================== */
+
+async function addProduct() {
+
+  try {
+
+    const name =
+      document.getElementById("productName").value.trim();
+
+    const price =
+      document.getElementById("productPrice").value;
+
+    const category =
+      document.getElementById("productCategory").value;
+
+    const description =
+      document.getElementById("productDescription").value.trim();
+
+    const imageFile =
+      document.getElementById("productImage").files[0];
+
+
+    /* Check product name */
+
+    if (!name) {
+      showMessage("Please enter a product name.", "error");
+      return;
+    }
+
+
+    /* Check price */
+
+    if (!price) {
+      showMessage("Please enter the product price.", "error");
+      return;
+    }
+
+
+    /* Check image */
+
+    if (!imageFile) {
+      showMessage("Please select a product image.", "error");
+      return;
+    }
+
+
+    showMessage("Uploading product...", "success");
+
+
+    /* =================================================
+       CREATE UNIQUE IMAGE FILE NAME
+       ================================================= */
+
+    const fileExtension =
+      imageFile.name.split(".").pop();
+
+    const fileName =
+      Date.now() + "-" +
+      Math.random().toString(36).substring(2) +
+      "." +
+      fileExtension;
+
+
+    /* =================================================
+       UPLOAD IMAGE TO SUPABASE STORAGE
+       ================================================= */
+
+    const { error: uploadError } =
+      await supabaseClient
+        .storage
+        .from("product-images")
+        .upload(fileName, imageFile);
+
+
+    if (uploadError) {
+
+      console.error(uploadError);
+
+      throw new Error(
+        "Image upload failed: " +
+        uploadError.message
+      );
+
+    }
+
+
+    /* =================================================
+       GET PUBLIC IMAGE URL
+       ================================================= */
+
+    const { data: publicUrlData } =
+      supabaseClient
+        .storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+
+
+    const imageUrl =
+      publicUrlData.publicUrl;
+
+
+    /* =================================================
+       INSERT PRODUCT INTO DATABASE
+       ================================================= */
+
+    const { error: databaseError } =
+      await supabaseClient
+        .from("products")
+        .insert([
+          {
+            name: name,
+            price: Number(price),
+            category: category,
+            description: description,
+            image_url: imageUrl,
+            stock: true
+          }
+        ]);
+
+
+    if (databaseError) {
+
+      console.error(databaseError);
+
+      throw new Error(
+        "Product database error: " +
+        databaseError.message
+      );
+
+    }
+
+
+    /* =================================================
+       SUCCESS
+       ================================================= */
+
+    showMessage(
+      "Product added successfully! 🎉",
+      "success"
+    );
+
+
+    /* Clear form */
+
+    document.getElementById("productName").value = "";
+    document.getElementById("productPrice").value = "";
+    document.getElementById("productDescription").value = "";
+    document.getElementById("productImage").value = "";
+
+
+    /* Refresh products */
+
+    loadProducts();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    showMessage(
+      "Error: " + error.message,
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   LOAD PRODUCTS
+   ===================================================== */
+
+async function loadProducts() {
+
+  const productsContainer =
+    document.getElementById("products");
+
+  productsContainer.innerHTML =
+    "Loading products...";
+
+
+  const { data, error } =
+    await supabaseClient
+      .from("products")
+      .select("*")
+      .order("id", { ascending: false });
+
+
+  if (error) {
+
+    console.error(error);
+
+    productsContainer.innerHTML =
+      "<p style='color:red;'>Error loading products: " +
+      error.message +
+      "</p>";
+
+    return;
+  }
+
+
+  if (!data || data.length === 0) {
+
+    productsContainer.innerHTML =
+      "<p>No products added yet.</p>";
+
+    return;
+  }
+
+
+  productsContainer.innerHTML = "";
+
+
+  data.forEach(product => {
+
+    const productDiv =
+      document.createElement("div");
+
+    productDiv.className = "product";
+
+
+    productDiv.innerHTML = `
+
+      <img
+        src="${product.image_url}"
+        alt="${escapeHtml(product.name)}"
+      >
+
+      <div class="product-info">
+
+        <h3>${escapeHtml(product.name)}</h3>
+
+        <p>
+          <strong>₹${Number(product.price).toLocaleString("en-IN")}</strong>
+        </p>
+
+        <p>
+          Category: ${escapeHtml(product.category)}
+        </p>
+
+        <p>
+          ${escapeHtml(product.description || "")}
+        </p>
+
+      </div>
+
+      <button
+        class="delete-btn"
+        onclick="deleteProduct(${product.id}, '${escapeHtml(product.image_url)}')"
+      >
+        Delete
+      </button>
+
+    `;
+
+
+    productsContainer.appendChild(productDiv);
+
+  });
+
+}
+
+
+/* =====================================================
+   DELETE PRODUCT
+   ===================================================== */
+
+async function deleteProduct(id, imageUrl) {
+
+  const confirmation =
+    confirm("Are you sure you want to delete this product?");
+
+
+  if (!confirmation) {
+    return;
+  }
+
+
+  try {
+
+    /* Delete database record */
+
+    const { error } =
+      await supabaseClient
+        .from("products")
+        .delete()
+        .eq("id", id);
+
+
+    if (error) {
+
+      throw new Error(error.message);
+
+    }
+
+
+    showMessage(
+      "Product deleted successfully.",
+      "success"
+    );
+
+
+    loadProducts();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    showMessage(
+      "Delete error: " + error.message,
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   BASIC HTML ESCAPE
+   ===================================================== */
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =====================================================
+   LOAD PRODUCTS WHEN PAGE OPENS
+   ===================================================== */
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
