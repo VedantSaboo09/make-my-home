@@ -356,7 +356,7 @@
         <img
           src="bedcover1.jpg.jpeg"
           alt="Product 1"
-          category="bedcovers"
+          category="Bed Covers"
         >
 
         <div class="product-info">
@@ -391,7 +391,7 @@
         <img
           src="bedcover2.jpg.jpeg"
           alt="Product 2"
-          category="bedcovers"
+          category="Bed Covers"
         >
 
         <div class="product-info">
@@ -426,7 +426,7 @@
         <img
           src="bedcover3.jpg.jpeg"
           alt="Product 3"
-          category="comforters"
+          category="Comforters"
         >
 
         <div class="product-info">
@@ -504,22 +504,17 @@
 
 <script>
   function filterProducts(category) {
-
     const products = document.querySelectorAll(".product");
 
     products.forEach(function(product) {
+      const productCategory = product.dataset.category;
 
-      if (
-        category === "All" ||
-        product.getAttribute("data-category") === category
-      ) {
-        product.style.display = "block";
+      if (category === "All" || productCategory === category) {
+        product.style.display = "";
       } else {
         product.style.display = "none";
       }
-
     });
-
   }
 </script>
 
