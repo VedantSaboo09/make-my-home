@@ -133,91 +133,72 @@
 
   <!-- ADMIN PANEL -->
 
-  <div class="card" id="adminPanel">
+async function addProduct() {
+  const name = document.getElementById("name").value;
+  const price = document.getElementById("price").value;
+  const description = document.getElementById("description").value;
+  const category = document.getElementById("category").value;
+  const imageFile = document.getElementById("image_file").files[0];
 
-    <h2>Add Product</h2>
+  if (!name || !price || !category || !imageFile) {
+    alert("Please fill all required fields and select an image.");
+    return;
+  }
 
-    <label>Product Name</label>
+  try {
+    // Create a unique file name
+    const fileName = Date.now() + "-" + imageFile.name;
 
-    <input
-      type="text"
-      id="productName"
-      placeholder="Example: Beautiful Bed Cover"
-    >
+    // Upload image to Supabase Storage
+    const { error: uploadError } = await supabaseClient.storage
+      .from("product-images")
+      .upload(fileName, imageFile);
 
+    if (uploadError) {
+      console.error(uploadError);
+      alert("Image upload failed: " + uploadError.message);
+      return;
+    }
 
-    <label>Price</label>
+    // Get public image URL
+    const { data: publicUrlData } = supabaseClient.storage
+      .from("product-images")
+      .getPublicUrl(fileName);
 
-    <input
-      type="number"
-      id="productPrice"
-      placeholder="Example: 4715"
-    >
+    const imageUrl = publicUrlData.publicUrl;
 
+    // Add product to database
+    const { error: insertError } = await supabaseClient
+      .from("products")
+      .insert([
+        {
+          name: name,
+          price: Number(price),
+          description: description,
+          category: category,
+          image_url: imageUrl
+        }
+      ]);
 
-    <label>Description</label>
+    if (insertError) {
+      console.error(insertError);
+      alert("Product could not be added: " + insertError.message);
+      return;
+    }
 
-    <textarea
-      id="productDescription"
-      placeholder="Enter product description"
-    ></textarea>
+    alert("Product added successfully! 🎉");
 
+    // Clear form
+    document.getElementById("name").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("image_file").value = "";
 
-    <label>Category</label>
-
-    <select id="productCategory">
-
-      <option value="bedcovers">
-        Bed Covers
-      </option>
-
-      <option value="comforters">
-        Comforters
-      </option>
-
-      <option value="bedsheets">
-        Bedsheets
-      </option>
-
-      <option value="curtains">
-        Curtains
-      </option>
-
-      <option value="cushioncovers">
-        Cushion Covers
-      </option>
-
-      <option value="homedecor">
-        Home Decor
-      </option>
-
-    </select>
-
-
-    <label>Image URL</label>
-
-    <input
-      type="file"
-      id="image_file"
-      accept="image/*"
-    >
-
-
-    <button onclick="addProduct()">
-      Add Product
-    </button>
-
-    <button class="logout" onclick="logout()">
-      Logout
-    </button>
-
-    <div class="message" id="productMessage"></div>
-
-  </div>
-
-</div>
-
-
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong.");
+  }
+}
 <script>
 
   /* SUPABASE */
