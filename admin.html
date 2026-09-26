@@ -99,7 +99,6 @@
 
   <h1>Make My Home</h1>
 
-
   <!-- LOGIN -->
 
   <div class="card" id="loginPanel">
@@ -145,7 +144,6 @@
       placeholder="Example: Beautiful Bed Cover"
     >
 
-
     <label>Price</label>
 
     <input
@@ -154,7 +152,6 @@
       placeholder="Example: 4715"
     >
 
-
     <label>Description</label>
 
     <textarea
@@ -162,46 +159,31 @@
       placeholder="Enter product description"
     ></textarea>
 
-
     <label>Category</label>
 
     <select id="productCategory">
 
-      <option value="bedcovers">
-        Bed Covers
-      </option>
+      <option value="bedcovers">Bed Covers</option>
 
-      <option value="comforters">
-        Comforters
-      </option>
+      <option value="comforters">Comforters</option>
 
-      <option value="bedsheets">
-        Bedsheets
-      </option>
+      <option value="bedsheets">Bedsheets</option>
 
-      <option value="curtains">
-        Curtains
-      </option>
+      <option value="curtains">Curtains</option>
 
-      <option value="cushioncovers">
-        Cushion Covers
-      </option>
+      <option value="cushioncovers">Cushion Covers</option>
 
-      <option value="homedecor">
-        Home Decor
-      </option>
+      <option value="homedecor">Home Decor</option>
 
     </select>
 
-
-    <label>Image URL</label>
+    <label>Product Image</label>
 
     <input
       type="file"
-      id="imagefile"
+      id="imageFile"
       accept="image/*"
     >
-
 
     <button onclick="addProduct()">
       Add Product
@@ -220,11 +202,15 @@
 
 <script>
 
-  /* SUPABASE */
+  /* =========================
+     SUPABASE CONNECTION
+  ========================= */
 
-  const SUPABASE_URL = "https://osnzonmcobilkeetwwpf.supabase.co";
+  const SUPABASE_URL =
+    "https://osnzonmcobilkeetwwpf.supabase.co";
 
-  const SUPABASE_KEY = "sb_publishable_rdOm4RUqAnNfUreHLikodA_77SN8wwj";
+  const SUPABASE_KEY =
+    "sb_publishable_rdOm4RUqAnNfUreHLikodA_77SN8wwj";
 
   const supabaseClient =
     window.supabase.createClient(
@@ -233,16 +219,28 @@
     );
 
 
-  /* LOGIN */
+  /* =========================
+     LOGIN
+  ========================= */
 
   async function login() {
 
     const email =
-      document.getElementById("email").value;
+      document.getElementById("email").value.trim();
 
     const password =
       document.getElementById("password").value;
 
+    const message =
+      document.getElementById("loginMessage");
+
+    message.textContent = "";
+
+    if (!email || !password) {
+      message.textContent =
+        "Please enter your email and password.";
+      return;
+    }
 
     const { data, error } =
       await supabaseClient.auth.signInWithPassword({
@@ -250,22 +248,21 @@
         password: password
       });
 
-
     if (error) {
 
-      document.getElementById("loginMessage").textContent =
-        error.message;
+      message.textContent =
+        "Login failed: " + error.message;
 
       return;
     }
 
-
     showAdminPanel();
-
   }
 
 
-  /* SHOW ADMIN */
+  /* =========================
+     SHOW ADMIN PANEL
+  ========================= */
 
   function showAdminPanel() {
 
@@ -274,81 +271,154 @@
 
     document.getElementById("adminPanel").style.display =
       "block";
-
   }
 
 
-  /* ADD PRODUCT */
+  /* =========================
+     ADD PRODUCT
+  ========================= */
 
   async function addProduct() {
 
     const name =
-      document.getElementById("productName").value;
+      document.getElementById("productName").value.trim();
 
     const price =
       document.getElementById("productPrice").value;
 
     const description =
-      document.getElementById("productDescription").value;
+      document.getElementById("productDescription").value.trim();
 
     const category =
       document.getElementById("productCategory").value;
 
-    const imageUrl =
-      document.getElementById("imageUrl").value;
+    const imageFile =
+      document.getElementById("imageFile").files[0];
+
+    const message =
+      document.getElementById("productMessage");
+
+    message.textContent = "";
 
 
-    if (
-      !name ||
-      !price ||
-      !description ||
-      !category ||
-      !imageUrl
-    ) {
+    /* Check fields */
 
-      document.getElementById("productMessage").textContent =
-        "Please fill all fields.";
+    if (!name || !price || !description || !category || !imageFile) {
 
-      return;
-    }
-
-
-    const { error } =
-      await supabaseClient
-        .from("products")
-        .insert([
-          {
-            name: name,
-            price: Number(price),
-            description: description,
-            category: category,
-            image_url: imageUrl
-          }
-        ]);
-
-
-    if (error) {
-
-      document.getElementById("productMessage").textContent =
-        "Error: " + error.message;
+      message.textContent =
+        "Please fill all fields and select an image.";
 
       return;
     }
 
 
-    document.getElementById("productMessage").textContent =
-      "Product added successfully!";
+    try {
+
+      /* Uploading message */
+
+      message.textContent =
+        "Uploading image...";
 
 
-    document.getElementById("productName").value = "";
-    document.getElementById("productPrice").value = "";
-    document.getElementById("productDescription").value = "";
-    document.getElementById("imageUrl").value = "";
+      /* Create unique file name */
 
+      const fileName =
+        Date.now() + "-" +
+        imageFile.name.replace(/\s+/g, "-");
+
+
+      /* Upload image to Storage */
+
+      const { error: uploadError } =
+        await supabaseClient.storage
+          .from("product-images")
+          .upload(fileName, imageFile);
+
+
+      if (uploadError) {
+
+        message.textContent =
+          "Image upload failed: " +
+          uploadError.message;
+
+        return;
+      }
+
+
+      /* Get public URL */
+
+      const { data: publicUrlData } =
+        supabaseClient.storage
+          .from("product-images")
+          .getPublicUrl(fileName);
+
+
+      const imageUrl =
+        publicUrlData.publicUrl;
+
+
+      /* Save product */
+
+      message.textContent =
+        "Saving product...";
+
+
+      const { error: insertError } =
+        await supabaseClient
+          .from("products")
+          .insert([
+            {
+              name: name,
+              price: Number(price),
+              description: description,
+              category: category,
+              image_url: imageUrl
+            }
+          ]);
+
+
+      if (insertError) {
+
+        message.textContent =
+          "Product error: " +
+          insertError.message;
+
+        return;
+      }
+
+
+      /* Success */
+
+      message.textContent =
+        "Product added successfully! 🎉";
+
+
+      /* Clear form */
+
+      document.getElementById("productName").value = "";
+
+      document.getElementById("productPrice").value = "";
+
+      document.getElementById("productDescription").value = "";
+
+      document.getElementById("imageFile").value = "";
+
+    }
+
+    catch (error) {
+
+      console.error(error);
+
+      message.textContent =
+        "Something went wrong: " +
+        error.message;
+    }
   }
 
 
-  /* LOGOUT */
+  /* =========================
+     LOGOUT
+  ========================= */
 
   async function logout() {
 
@@ -359,23 +429,29 @@
 
     document.getElementById("loginPanel").style.display =
       "block";
-
   }
 
 
-  /* CHECK LOGIN */
+  /* =========================
+     CHECK LOGIN
+  ========================= */
 
   async function checkLogin() {
 
-    const { data } =
+    const { data, error } =
       await supabaseClient.auth.getSession();
+
+    if (error) {
+
+      console.error(error);
+
+      return;
+    }
 
     if (data.session) {
 
       showAdminPanel();
-
     }
-
   }
 
 
