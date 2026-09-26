@@ -92,7 +92,7 @@
 
     .section-title {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
     }
 
     .section-title h2 {
@@ -102,6 +102,38 @@
 
     .section-title p {
       color: #777;
+    }
+
+    /* CATEGORY BUTTONS */
+
+    .category-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+
+    .category-buttons button {
+      background: white;
+      color: #222;
+      border: 1px solid #ddd;
+      padding: 10px 18px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    .category-buttons button:hover {
+      background: #222;
+      color: white;
+    }
+
+    .category-buttons button.active {
+      background: #222;
+      color: white;
     }
 
     .products {
@@ -228,32 +260,16 @@
         padding-left: 5%;
         padding-right: 5%;
       }
+
+      .category-buttons {
+        gap: 8px;
+      }
+
+      .category-buttons button {
+        padding: 9px 14px;
+        font-size: 13px;
+      }
     }
-    /* CATEGORY BUTTONS */
-
-.category-buttons {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 35px;
-}
-
-.category-buttons button {
-  background: white;
-  color: #222;
-  border: 1px solid #ddd;
-  padding: 10px 18px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: 0.3s;
-}
-
-.category-buttons button:hover {
-  background: #222;
-  color: white;
-}
   </style>
 </head>
 
@@ -313,50 +329,55 @@
       </p>
 
     </div>
+
+
     <!-- CATEGORY BUTTONS -->
 
-<div class="category-buttons">
+    <div class="category-buttons">
 
-  <button onclick="filterProducts('All')">All</button>
+      <button class="active" onclick="filterProducts('all', this)">
+        All
+      </button>
 
-  <button onclick="filterProducts('Bed Covers')">
-    Bed Covers
-  </button>
+      <button onclick="filterProducts('bedcovers', this)">
+        Bed Covers
+      </button>
 
-  <button onclick="filterProducts('Comforters')">
-    Comforters
-  </button>
+      <button onclick="filterProducts('comforters', this)">
+        Comforters
+      </button>
 
-  <button onclick="filterProducts('Bedsheets')">
-    Bedsheets
-  </button>
+      <button onclick="filterProducts('bedsheets', this)">
+        Bedsheets
+      </button>
 
-  <button onclick="filterProducts('Curtains')">
-    Curtains
-  </button>
+      <button onclick="filterProducts('curtains', this)">
+        Curtains
+      </button>
 
-  <button onclick="filterProducts('Cushion Covers')">
-    Cushion Covers
-  </button>
+      <button onclick="filterProducts('cushioncovers', this)">
+        Cushion Covers
+      </button>
 
-  <button onclick="filterProducts('Home Decor')">
-    Home Decor
-  </button>
+      <button onclick="filterProducts('homedecor', this)">
+        Home Decor
+      </button>
 
-</div>
+    </div>
 
+
+    <!-- PRODUCTS -->
 
     <div class="products">
 
 
       <!-- PRODUCT 1 -->
 
-      <div class="product">
+      <div class="product" data-category="bedcovers">
 
         <img
           src="bedcover1.jpg.jpeg"
-          alt="Product 1"
-          category="Bed Covers"
+          alt="Beautiful Bed Cover"
         >
 
         <div class="product-info">
@@ -386,12 +407,11 @@
 
       <!-- PRODUCT 2 -->
 
-      <div class="product">
+      <div class="product" data-category="bedcovers">
 
         <img
           src="bedcover2.jpg.jpeg"
-          alt="Product 2"
-          category="Bed Covers"
+          alt="Premium Bed Cover"
         >
 
         <div class="product-info">
@@ -421,12 +441,11 @@
 
       <!-- PRODUCT 3 -->
 
-      <div class="product">
+      <div class="product" data-category="comforters">
 
         <img
           src="bedcover3.jpg.jpeg"
-          alt="Product 3"
-          category="Comforters"
+          alt="Comforter"
         >
 
         <div class="product-info">
@@ -502,21 +521,54 @@
 
   </footer>
 
-<script>
-  function filterProducts(category) {
-    const products = document.querySelectorAll(".product");
 
-    products.forEach(function(product) {
-      const productCategory = product.dataset.category;
+  <!-- CATEGORY FILTER SCRIPT -->
 
-      if (category === "All" || productCategory === category) {
-        product.style.display = "";
-      } else {
-        product.style.display = "none";
-      }
-    });
-  }
-</script>
+  <script>
+
+    function filterProducts(category, clickedButton) {
+
+      const products = document.querySelectorAll(".product");
+
+      const buttons = document.querySelectorAll(".category-buttons button");
+
+
+      /* Remove active state from all buttons */
+
+      buttons.forEach(function(button) {
+        button.classList.remove("active");
+      });
+
+
+      /* Add active state to clicked button */
+
+      clickedButton.classList.add("active");
+
+
+      /* Show / hide products */
+
+      products.forEach(function(product) {
+
+        const productCategory = product.getAttribute("data-category");
+
+        if (
+          category === "all" ||
+          productCategory === category
+        ) {
+
+          product.style.display = "";
+
+        } else {
+
+          product.style.display = "none";
+
+        }
+
+      });
+
+    }
+
+  </script>
 
 </body>
 </html>
