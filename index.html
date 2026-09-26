@@ -229,6 +229,31 @@
         padding-right: 5%;
       }
     }
+    /* CATEGORY BUTTONS */
+
+.category-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 35px;
+}
+
+.category-buttons button {
+  background: white;
+  color: #222;
+  border: 1px solid #ddd;
+  padding: 10px 18px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.category-buttons button:hover {
+  background: #222;
+  color: white;
+}
   </style>
 </head>
 
@@ -476,6 +501,27 @@
     © 2026 Make My Home. All Rights Reserved.
 
   </footer>
+
+<script>
+  function filterProducts(category) {
+
+    const products = document.querySelectorAll(".product");
+
+    products.forEach(function(product) {
+
+      if (
+        category === "All" ||
+        product.getAttribute("data-category") === category
+      ) {
+        product.style.display = "block";
+      } else {
+        product.style.display = "none";
+      }
+
+    });
+
+  }
+</script>
 
 </body>
 </html>
